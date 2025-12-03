@@ -44,25 +44,19 @@ pipeline {
         }
 
         // --- مرحلة تسجيل الدخول إلى Docker Hub باستخدام Credentials ---
-        stage('03. Login to Docker Hub') {
-            steps {
-                // استخدام معرّف الـ Credentials المخزّن في Jenkins
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: "${DOCKER_CREDENTIAL_ID}",
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )
-                ]) {
-                    sh '''
-                        echo "🔑 Logging in with user: $DOCKER_USER"
-                        // تسجيل الدخول باستخدام كلمة المرور عبر STDIN لتفادي ظهورها في الـ logs
-                        echo "$DOCKER_PASS" | docker login \
-                            --username "$DOCKER_USER" \
-                            --password-stdin
-                    '''
-                }
-            }
+stage('03. Login to Docker Hub') {
+    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                                      usernameVariable: 'DOCKER_USER',
+                                      passwordVariable: 'DOCKER_PASS')]) {
+
+        sh """
+            echo "🔑 Logging in with user: $DOCKER_USER"
+            # تسجيل الدخول باستخدام كلمة المرور عبر STDIN لتجنب ظهورها
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+        """
+    }
+}
+
         }
 
         // --- مرحلة دفع الصورة (Push) ---
